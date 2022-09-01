@@ -27,7 +27,6 @@ void setup() {
 
   // Set pin mode
   pinMode(trigerPin, INPUT);
-  pinMode(outPin, OUTPUT);
   for (int i = 0; i <= 2; i++) {
     pinMode(relayPins[i], OUTPUT);
     pinMode(togglePins[i], INPUT);  
@@ -49,6 +48,8 @@ void loop() {
 
   int operateMode = digitalRead(trigerPin);
 
+  Serial.println(operateMode);
+
   if (operateMode) {
 
     // Print current mode
@@ -59,31 +60,33 @@ void loop() {
       display.display();
     }
 
+    // int states[2];    
+
     /* --- ↓↓ ここを編集すればバルブをコントロールできます ↓↓ ---- */
     /* --- ↓↓ Edit here to control valve states ↓↓ ---- */
 
     // (1) valve2（真空ポンプ） のみ2秒OPEN
-    set_valves(int {LOW, HIGH, LOW});
+    set_valves((const int []){LOW, HIGH, LOW});
     delay(2000);
 
     // (2) valve1（VOC） のみ1秒OPEN
-    set_valves(int {HIGH, LOW, LOW});
+    set_valves((const int []){HIGH, LOW, LOW});
     delay(1000);
 
     // (3) 全てCLOSE 10秒待機
-    set_valves(int {LOW, LOW, LOW});
+    set_valves((const int []){LOW, LOW, LOW});
     delay(10000);
 
     // (4) valve2（真空ポンプ）のみ2秒OPEN
-    set_valves(int {LOW, HIGH, LOW});
+    set_valves((const int []){LOW, HIGH, LOW});
     delay(2000);
         
     // (5) valve3（窒素） のみ1秒OPEN
-    set_valves(int {LOW, LOW, HIGH});
+    set_valves((const int []){LOW, LOW, HIGH});
     delay(1000);
         
     // (6) 全てCLOSE 10秒待機
-    set_valves(int {LOW, LOW, LOW});
+    set_valves((const int []){LOW, LOW, LOW});
     delay(10000);
     
     /* --- ↑↑ ここを編集してバルブをコントロールしてください ↑↑ ---- */
@@ -115,13 +118,13 @@ void loop() {
 
 // Set a valve state (HIGH or LOW)
 void set_valve(int valve_id, int valve_state) {
-  digitalWrite(relayPins[i], valve_state);
+  digitalWrite(relayPins[valve_id], valve_state);
   relayStates[valve_id] = valve_state;
   update_display();
 }
 
 // Set valve states by array
-void set_valves(int *valve_states) {
+void set_valves(const int *valve_states) {
   for (int i = 0; i <= 2; i++) {
     set_valve(i, valve_states[i]);
   }
@@ -140,6 +143,11 @@ void update_display() {
     } else {
       _n = display.drawString(32, i * 21, "CLOSE");
     }
+  }
+  if (currentMode == 1) {
+    display.drawString(108, 0, "*a");
+  } else {
+    display.drawString(108, 0, "*m");
   }
   display.display();   
 }
