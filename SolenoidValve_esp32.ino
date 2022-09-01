@@ -89,7 +89,7 @@ void loop() {
     set_valves((const int []){LOW, LOW, LOW});
     delay(10000);
     
-    /* --- ↑↑ ここを編集してバルブをコントロールしてください ↑↑ ---- */
+    /* --- ↑↑ Edit here to control valve states ↑↑ ---- */
     /* --- ↑↑ ここを編集すればバルブをコントロールできます ↑↑ ---- */
     
   } else {
