@@ -3,3 +3,4 @@ Simple controller program of three relays by ESP32
 
 # Used libraries
 - https://github.com/ThingPulse/esp8266-oled-ssd1306
+- http://www.mathertel.de/Arduino/RotaryEncoderLibrary.aspx
