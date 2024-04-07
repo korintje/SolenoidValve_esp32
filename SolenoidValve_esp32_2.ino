@@ -33,6 +33,8 @@ struct DurationController {
 // Prepare the operation channel variable
 int currentChannel;
 int cycleNo;
+int waitTime = 3;
+int leftTime_ms_wait;
 int leftTime_ms_Ch0;
 int leftTime_ms_Ch1;
 int initialTime;
@@ -93,12 +95,10 @@ void setup() {
   display.display();
 
   // Initialize running parameters
-  currentChannel = -1;
+  currentChannel = -2;
   cycleNo = -1;
   durationCtrl_Ch0.val = 60;
   durationCtrl_Ch1.val = 60;
-  leftTime_ms_Ch0 = durationCtrl_Ch0.val;
-  leftTime_ms_Ch1 = durationCtrl_Ch1.val;
   initialTime = millis();
 
   // Serial connection  
@@ -111,15 +111,24 @@ void loop() {
   
   if (digitalRead(PIN_RUN)) {
 
-    if (currentChannel == -1) {
+    if (currentChannel == -2) {
 
       // Initial setup after trigger
       digitalWrite(PIN_TRIG, LOW);
-      currentChannel = 0;
       cycleNo = 1;
+      currentChannel = -1;
       leftTime_ms_Ch0 = durationCtrl_Ch0.val * 1000;
       leftTime_ms_Ch1 = durationCtrl_Ch1.val * 1000;
-      initialTime = millis();
+      initialTime = millis();       
+
+    } else if (currentChannel == -1) {
+
+      // Waiting time after trigger
+      leftTime_ms_wait = initialTime + waitTime * 1000 - millis();
+      if (leftTime_ms_wait <= 0) {
+        currentChannel = 1;
+        initialTime = millis();
+      }
     
     } else if (currentChannel == 0) {
 
@@ -127,6 +136,7 @@ void loop() {
       digitalWrite(PIN_TRIG, LOW);
       leftTime_ms_Ch0 = initialTime + durationCtrl_Ch0.val * 1000 - millis();
       if (leftTime_ms_Ch0 <= 0) {
+        cycleNo += 1;
         currentChannel = 1;
         leftTime_ms_Ch0 = durationCtrl_Ch0.val * 1000;
         initialTime = millis();
@@ -138,7 +148,7 @@ void loop() {
       digitalWrite(PIN_TRIG, HIGH);
       leftTime_ms_Ch1 = initialTime + durationCtrl_Ch1.val * 1000 - millis();
       if (leftTime_ms_Ch1 <= 0) {
-        cycleNo += 1;
+        // cycleNo += 1;
         currentChannel = 0;
         leftTime_ms_Ch1 = durationCtrl_Ch1.val * 1000;
         initialTime = millis();
@@ -150,25 +160,27 @@ void loop() {
     display.clear();
     if ((durationCtrl_Rpt.val != 0) and (durationCtrl_Rpt.val < cycleNo)) {
       digitalWrite(PIN_TRIG, LOW);
-      currentChannel = -2;
+      currentChannel = -3;
       display.drawString(0, 0, "[FIN] x" + String(durationCtrl_Rpt.val));
       display.drawString(0, 21, "Ch0: " + String(durationCtrl_Ch0.val) + " s");
       display.drawString(0, 42, "Ch1: " + String(durationCtrl_Ch1.val) + " s");
+    } else if (currentChannel < 0) {
+      display.drawString(0, 0, "[INIT] in " + String(leftTime_ms_wait / 1000) + " s");
+      display.drawString(0, 21, "Ch0: " + String(durationCtrl_Ch0.val) + " s");
+      display.drawString(0, 42, "Ch1: " + String(durationCtrl_Ch1.val) + " s");      
     } else {
       display.drawString(0, 0, "[RUN] " + String(cycleNo) + " / " + String(durationCtrl_Rpt.val));
       display.drawString(0, 21, "Ch0: " + String(leftTime_ms_Ch0 / 1000) + " s");
       display.drawString(0, 42, "Ch1: " + String(leftTime_ms_Ch1 / 1000) + " s");    
-    } 
+    }
     display.display();
 
   } else {
 
     // Initialize running parameters
     digitalWrite(PIN_TRIG, LOW);
-    currentChannel = -1;
+    currentChannel = -2;
     cycleNo = -1;
-    leftTime_ms_Ch0 = durationCtrl_Ch0.val;
-    leftTime_ms_Ch1 = durationCtrl_Ch0.val;
     initialTime = millis();
 
     // Enable rotary encoders
